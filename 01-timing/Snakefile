@@ -1,0 +1,71 @@
+import numpy as np
+
+# path to snakemake-slurm config
+# /home/hblee/snakemake_slurm/testv8/profile_cpu
+# snakemake --profile=/path/to/profile
+#
+# tree simulation setting
+sample_size = np.array([2000, 5000, 10000, 20000, 50000, 100000])
+ts_pattern = "tree_sequences/ts_n{num_individuals}.ts"
+tree_sequences = expand(ts_pattern,
+			 			num_individuals = sample_size)
+
+# time testing
+time_pattern = "runtime/runtime_n{num_individuals}.npy"
+runtimes = expand(time_pattern,
+				  num_individuals = sample_size)
+
+# figure
+fig_path = "figs/runtime.svg"
+
+# tmrca
+tmrca_pattern = "tmrca/t_n{num_individuals}.txt"
+tmrcas = expand(tmrca_pattern,
+                num_individuals = sample_size)
+
+# ---
+rule all:
+	input:
+		fig_path,
+#		tmrcas
+# ---
+rule ts:
+	output:
+		ts_save_path = ts_pattern	
+	params:
+		seq_length = 1e8,
+		num_individuals = "{num_individuals}",		
+	script:
+		"00-sim_ts.py"
+# ---
+rule time:
+	input:
+		ts_path = ts_pattern
+	output:
+		save_path = time_pattern
+	params:
+		num_individuals = "{num_individuals}"
+	script:
+		"01-time.py"
+
+# ---
+rule figure:
+	input:
+		runtimes=runtimes
+	output:
+		save_path = fig_path
+	params:
+		sample_size = sample_size
+	script:
+		"02-figs.py"
+
+# ---
+rule tmrca:
+	input:
+		ts_path = ts_pattern
+	output:
+		out_path = tmrca_pattern
+	params:
+		num_individuals = "{num_individuals}"
+	script:
+		"01-tmrca.py"
