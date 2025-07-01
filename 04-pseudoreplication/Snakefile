@@ -1,0 +1,68 @@
+import numpy as np
+
+# path to snakemake-slurm config
+# /home/hblee/snakemake_slurm/testv8/profile_cpu
+# snakemake --profile=/path/to/profile
+#
+# tree simulation setting
+sample_size = np.array([2000])
+ts_pattern = "tree_sequences/ts_n{num_individuals}.ts"
+tree_sequences = expand(ts_pattern,
+			 			num_individuals = sample_size)
+
+# time testing
+splits = [1, 2]
+iters = np.arange(400)
+vc_pattern = "variance_components/vc_n{num_individuals}_{iter}_{split}.npy"
+vcs = expand(vc_pattern,
+		  	 num_individuals = sample_size,
+			 iter = iters,
+             split = splits)
+
+# combine output
+combine_pattern = "vc_combine/vc_n{num_individuals}_{split}.npy"
+combines = expand(combine_pattern,
+				  num_individuals = sample_size,
+				  split = splits)
+
+# ---
+rule all:
+	input:
+		combines
+
+# ---
+rule ts:
+	output:
+		ts_save_path = ts_pattern	
+	params:
+		seq_length = 1e4,
+		num_individuals = "{num_individuals}",		
+	script:
+		"00-sim_ts.py"
+# ---
+rule vc:
+	input:
+		ts_path = ts_pattern
+	output:
+		save_path = expand(vc_pattern,
+                           num_individuals = "{num_individuals}",
+						   iter = "{iter}",
+                           split = splits)
+	params:
+		num_individuals = "{num_individuals}",
+		iter = "{iter}"
+	script:
+		"01-estimation.py"
+
+# ---
+rule combine:
+	output:
+		combine_pattern
+	input:
+		npy_paths = expand(vc_pattern,
+			num_individuals = "{num_individuals}",
+			iter = iters,
+			split = "{split}")
+	script:
+		"02-combine.py"	
+			
