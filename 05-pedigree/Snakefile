@@ -1,0 +1,107 @@
+import numpy as np
+
+# path to snakemake-slurm config
+# /home/hblee/snakemake_slurm/testv8/profile_cpu
+# snakemake --profile=/path/to/profile
+#
+
+prefix = "spatial-simulation"
+
+pheno_file = prefix + ".phenotypes.txt"
+
+blup_true_pat = "blup_true/" + prefix + ".blup.it.{it}.npy"
+blups_true = expand(blup_true_pat, it = np.arange(5))
+
+blup_ped_pat = "blup_ped/" + prefix + ".blup.it.{it}.txt"
+blups_ped = expand(blup_ped_pat, it = np.arange(5))
+
+blup_infer_pat = "blup_infer/" + prefix + ".blup.it.{it}.npy"
+blups_infer = expand(blup_infer_pat, it = np.arange(5))
+
+
+# ---
+prefix_pedigree = "pedigree/spatial-simulaiton"
+rule pedigree:
+	output:
+		prefix_pedigree + ".pedigree.trees",
+		prefix_pedigree + ".pedigree.tables"
+	shell:
+		"python spatial-simulation-pedigree.py --out-prefix {prefix_pedigree}"
+
+# ---
+prefix_arg = "arg/spatial-simulation"
+arg_pat = prefix_arg + ".{it}.genealogies.trees"
+trait_pat = prefix_arg + ".{it}.phenotypes.pkl"
+rule arg:
+	input:
+		prefix_pedigree + ".pedigree.trees",
+		prefix_pedigree + ".pedigree.tables"
+	output:
+		arg_pat,
+		trait_pat,
+	shell:
+		"python spatial-simulation-arg.py --in-prefix {prefix_pedigree} --out-prefix {prefix_arg} --it {wildcards.it} --seed {wildcards.it}"
+
+# ---
+prefix_ped = "pedigree/spatial-simulation"
+pheno_pat = prefix_ped + ".{it}.phenotypes.txt"
+rule rconvert:
+	input:
+		arg_pat,
+		trait_pat,
+	output:
+		pheno_pat,
+	shell:
+		"python 02-rconvert.py --in-prefix {prefix_arg} --it {wildcards.it} --out-prefix {prefix_ped}"
+
+# ---
+pblup_pat = prefix_ped + ".{it}.blup.txt"
+rule pedigreelmm:
+	input:
+		pheno=pheno_pat,
+		grm="spatial-simulation.pedigree.grm.mtx",
+	output:
+		blup=pblup_pat,
+	script:
+		"03-pedigreelmm.R"
+# ---
+prefix_true = "true/spatial-simulation"
+true_pat = prefix_true + ".{it}.blup.npy"
+rule true:
+	input:
+		arg_pat,
+		trait_pat,
+	output:
+		true_pat,
+	shell:
+		"python 01-tslmm_true.py --in-prefix {prefix_arg} --it {wildcards.it} --out-prefix {prefix_true}"
+
+# ---
+prefix_infer = "infer/spatial-simulation"
+infer_pat = prefix_infer+ ".{it}.inferred.dated.trees"
+rule tsinfer:
+	input:
+		arg_pat,
+	output:
+		infer_pat,
+	shell:
+		"python spatial-simulation-infer.py --in-prefix {prefix_arg} --it {wildcards.it} --out-prefix {prefix_infer}"
+		
+# ---
+iblup_pat = prefix_infer + ".{it}.blup.npy"
+rule iblup:
+	input:
+		infer_pat,
+		trait_pat,
+	output:
+		iblup_pat,
+	shell:
+		"python 04-tslmm_infer.py --tree-prefix {prefix_infer} --pheno-prefix {prefix_arg} --it {wildcards.it} --out-prefix {prefix_infer}"
+
+# ---
+its = np.arange(5)
+rule all:
+	input:
+		expand(iblup_pat, it=its),
+		expand(pblup_pat, it=its),
+		expand(true_pat, it=its),
