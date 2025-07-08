@@ -99,9 +99,33 @@ rule iblup:
 		"python 04-tslmm_infer.py --tree-prefix {prefix_infer} --pheno-prefix {prefix_arg} --it {wildcards.it} --out-prefix {prefix_infer}"
 
 # ---
+sgrm_pat = prefix_arg + ".{it}.grm.txt"
+rule sgrm:
+	input:
+		arg_pat,
+	output:
+		sgrm_pat,	
+	shell:
+		"python spatial-simulation-site.py --in-prefix {prefix_arg} --it {wildcards.it} --out-prefix {prefix_arg}"
+
+# ---
+prefix_site = "site/spatial-simulation"
+sblup_pat = prefix_site + ".{it}.blup.txt"
+rule sitelmm:
+	input:
+		pheno=pheno_pat,
+		grm=prefix_arg + ".{it}.grm.txt",
+	output:
+		blup=sblup_pat,
+	script:
+		"05-sitelmm.R"
+
+
+# ---
 its = np.arange(5)
 rule all:
-	input:
+	input:		
+		expand(sblup_pat, it=its),
 		expand(iblup_pat, it=its),
 		expand(pblup_pat, it=its),
 		expand(true_pat, it=its),
