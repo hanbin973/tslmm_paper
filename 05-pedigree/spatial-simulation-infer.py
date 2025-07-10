@@ -48,7 +48,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.basicConfig(
-        filename=args.out_prefix + ".{args.it}.inferred.log",
+        filename=args.out_prefix + f".{args.it}.inferred.log",
         level=logging.INFO, 
         filemode="w",
     )
