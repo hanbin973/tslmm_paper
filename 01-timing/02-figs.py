@@ -34,8 +34,8 @@ times['log_time'] = np.log(times['time'])
 # the main fit
 fit = smf.ols(formula='time ~ num_individuals + num_edges : np.log(num_individuals)', data=times).fit()
 
-print(fit.summary())
-print(fit.params)
+#print(fit.summary())
+#print(fit.params)
 
 # fits used to make smooth lines for the univariate plots
 edge_fit = smf.ols(formula='log_edges ~ log_indivs + I(log_indivs**2)', data=times).fit()
@@ -54,11 +54,13 @@ pred['log_indivs'] = np.log(pred['num_individuals'])
 pred['num_edges'] = np.exp(edge_fit.predict(pred))
 pred['time'] = fit.predict(pred)
 
+fs=9
+
 ax[0].scatter(gby_mean.index, gby_mean, label='runtime', c='blue')
 ax[0].scatter(times['num_individuals'], times['time'], marker='.', c='blue')
 ax[0].plot(pred['num_individuals'], pred['time'], c='red', label='model')
-ax[0].set_xlabel('Thousands of individuals', fontsize=10)
-ax[0].set_ylabel('Time (s)', fontsize=10)
+ax[0].set_xlabel('Thousands of individuals', fontsize=fs)
+ax[0].set_ylabel('Time (s)', fontsize=fs)
 # ax[0].legend()
 
 # edge
@@ -73,8 +75,8 @@ pred['time'] = fit.predict(pred)
 ax[1].scatter(gby_mean.index, gby_mean, label='runtime', c='blue')
 ax[1].scatter(times['num_edges'], times['time'], marker='.', c='blue')
 ax[1].plot(pred['num_edges'], pred['time'], c='red', label='model')
-ax[1].set_xlabel('Millions of edges', fontsize=10)
-ax[1].set_ylabel('Time (s)', fontsize=10)
+ax[1].set_xlabel('Millions of edges', fontsize=fs)
+ax[1].set_ylabel('Time (s)', fontsize=fs)
 # ax[1].legend()
 
 # node
@@ -90,12 +92,19 @@ pred['time'] = fit.predict(pred)
 ax[2].scatter(gby_mean.index, gby_mean, label='runtime', c='blue')
 ax[2].scatter(times['num_nodes'], times['time'], marker='.', c='blue')
 ax[2].plot(pred['num_nodes'], pred['time'], c='red', label='model')
-ax[2].set_xlabel('Millions of nodes', fontsize=10)
-ax[2].set_ylabel('Time (s)', fontsize=10)
+ax[2].set_xlabel('Millions of nodes', fontsize=fs)
+ax[2].set_ylabel('Time (s)', fontsize=fs)
 # ax[2].legend()
 
+# some magic formatter suggested by gemini
+from matplotlib.ticker import ScalarFormatter
+formatter = ScalarFormatter(useMathText=True)
+formatter.set_scientific(True)
+formatter.set_powerlimits((0, 0))
+
 for i in range(3):
-    ax[i].ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    #ax[i].ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+    ax[i].xaxis.set_major_formatter(formatter)
 
 plt.tight_layout()
 plt.savefig(outpath, bbox_inches='tight')
