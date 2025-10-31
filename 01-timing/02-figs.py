@@ -34,8 +34,8 @@ times['log_time'] = np.log(times['time'])
 # the main fit
 fit = smf.ols(formula='time ~ num_individuals + num_edges : np.log(num_individuals)', data=times).fit()
 
-#print(fit.summary())
-#print(fit.params)
+print(fit.summary())
+print(fit.params)
 
 # fits used to make smooth lines for the univariate plots
 edge_fit = smf.ols(formula='log_edges ~ log_indivs + I(log_indivs**2)', data=times).fit()
@@ -96,15 +96,8 @@ ax[2].set_xlabel('Millions of nodes', fontsize=fs)
 ax[2].set_ylabel('Time (s)', fontsize=fs)
 # ax[2].legend()
 
-# some magic formatter suggested by gemini
-from matplotlib.ticker import ScalarFormatter
-formatter = ScalarFormatter(useMathText=True)
-formatter.set_scientific(True)
-formatter.set_powerlimits((0, 0))
-
 for i in range(3):
-    #ax[i].ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-    ax[i].xaxis.set_major_formatter(formatter)
+    ax[i].ticklabel_format(style='plain', axis='x')
 
 plt.tight_layout()
 plt.savefig(outpath, bbox_inches='tight')
