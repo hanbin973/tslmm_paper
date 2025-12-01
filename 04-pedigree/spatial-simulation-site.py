@@ -11,7 +11,7 @@ import arg_needle_lib
 
 docstring = \
 """
-- Write normalized GRM
+- Write arg-needle-lib GRM
 """
 
 
@@ -31,10 +31,13 @@ if __name__ == "__main__":
         help="iteration no.",
     )    
     parser.add_argument(
+        "--mu", type=float, default="1e-8",
+        help="mutation rate",
+    )
+    parser.add_argument(
         "--num-threads", type=int, default=32,
         help="Number of threads for inference",
     )
-    
     parser.add_argument(
         "--overwrite", action="store_true",
         help="Overwrite all output",
@@ -46,7 +49,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     logging.basicConfig(
-        filename=args.out_prefix + ".{args.it}.site.grm.log",
+        filename=args.out_prefix + ".{args.it}.{args.mu}.site.grm.log",
         level=logging.INFO, 
         filemode="w",
     )
@@ -68,9 +71,9 @@ if __name__ == "__main__":
     ts = tab.tree_sequence()
     logging.info(f"Pruned tree sequence:\n{ts}")
 
-    grm_path = args.out_prefix + f".{args.it}.grm.txt"
+    grm_path = "/home/hblee/nfs/tslmm_paper/05-pedigree/" + args.out_prefix + f".{args.it}.{args.mu}.grm.txt"
     if not os.path.exists(grm_path) or args.overwite:
         arg = arg_needle_lib.tskit_to_arg(ts)
         arg.populate_children_and_roots()
-        grm = arg_needle_lib.monte_carlo_arg_grm(arg, monte_carlo_mu=1e-8)    
+        grm = arg_needle_lib.monte_carlo_arg_grm(arg, monte_carlo_mu=args.mu, alpha=0)    
         np.savetxt(grm_path, grm)
