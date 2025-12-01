@@ -1,1 +1,0 @@
-{"record_format_version": 5, "code": null, "rule": "its", "input": ["tree_sequences/ts_n15000.ts"], "log": [], "params": [], "shellcmd": null, "incomplete": false, "starttime": null, "endtime": 1737546899.349667, "job_hash": 1461891084238, "conda_env": null, "software_stack_hash": "d41d8cd98f00b204e9800998ecf8427e", "container_img_url": null, "input_checksums": {}}
