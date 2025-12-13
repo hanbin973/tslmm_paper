@@ -1,0 +1,2 @@
+n_samples,mu,seq_len,n_trees,n_mutations,correlation,ts_mean_sec,ts_std_sec,arg_mean_sec,arg_std_sec,iterations
+2000,1e-08,1000000.0,14485,0,0.9539237135577535,0.005722148017957807,7.680325896957108e-05,0.14883089638315142,0.0029736311817479544,10

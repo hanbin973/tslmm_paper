@@ -1,0 +1,60 @@
+# --- Configuration ---
+SAMPLES = [2000, 5000, 10000, 20000]
+MUTATION_RATES = [1e-8, 1e-7, 1e-6]
+
+SEQ_LEN = 1e6
+NE = 100000
+RHO = 1e-8
+ITERATIONS = 10
+
+# 1. Target the final plot
+rule all:
+    input:
+        "results/benchmark_plot.png"
+
+# 2. Benchmark execution (Unchanged)
+rule run_benchmark:
+    input:
+        script="benchmark.py",
+        utils="utils.py"
+    output:
+        "results/raw/bench_N{n}_mu{mu}.csv"
+    params:
+        seq_len=SEQ_LEN,
+        ne=NE,
+        rho=RHO,
+        iters=ITERATIONS
+    shell:
+        """
+        python {input.script} \
+            --n_samples {wildcards.n} \
+            --mu {wildcards.mu} \
+            --seq_len {params.seq_len} \
+            --ne {params.ne} \
+            --rho {params.rho} \
+            --iterations {params.iters} \
+            --output {output}
+        """
+
+# 3. Aggregate CSVs (Unchanged)
+rule aggregate_results:
+    input:
+        expand("results/raw/bench_N{n}_mu{mu}.csv", n=SAMPLES, mu=MUTATION_RATES)
+    output:
+        "results/benchmark_summary.csv"
+    run:
+        import pandas as pd
+        dfs = [pd.read_csv(f) for f in input]
+        final_df = pd.concat(dfs, ignore_index=True)
+        final_df.sort_values(by=["n_samples", "mu"], inplace=True)
+        final_df.to_csv(output[0], index=False)
+
+# 4. NEW: Plotting Rule
+rule plot_results:
+    input:
+        csv="results/benchmark_summary.csv",
+        script="plot_benchmark.py"
+    output:
+        "results/benchmark_plot.png"
+    shell:
+        "python {input.script} --input {input.csv} --output {output}"
