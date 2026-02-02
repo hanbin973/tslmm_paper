@@ -39,7 +39,7 @@ ts = tskit.load(snakemake.input.ts_path)
 # paramter config
 x = np.zeros(ts.num_samples)
 x[0] = 1
-tmrca = np.dot(x, ts.genetic_relatedness_vector(x, mode='branch', centre=False))
+tmrca = np.dot(x, ts.genetic_relatedness_vector(x, mode='branch', centre=False, span_normalise=False))
 
 varcov = 2, 1
 mu = 1 / (4 * tmrca[0])

@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     # scale trait
     x = np.zeros(ts.num_samples); x[0] = 1
-    tmrca = np.dot(x, ts.genetic_relatedness_vector(x, mode="branch", centre=False))
+    tmrca = np.dot(x, ts.genetic_relatedness_vector(x, mode="branch", centre=False, span_normalise=False))
     scale = .5 / np.sqrt(tmrca * 1e-10)
     pheno = pheno * scale + np.random.normal(0, 1, size=pheno.shape[0])
 

@@ -37,8 +37,8 @@ its = tskit.load(snakemake.input.its_path)
 # paramter config
 x = np.zeros(its.num_samples)
 x[0] = 1
-tmrca = np.dot(x, ts.genetic_relatedness_vector(x, mode='branch', centre=False))
-tmrca_infer = np.dot(x, its.genetic_relatedness_vector(x, mode='branch', centre=False))
+tmrca = np.dot(x, ts.genetic_relatedness_vector(x, mode='branch', centre=False, span_normalise=False))
+tmrca_infer = np.dot(x, its.genetic_relatedness_vector(x, mode='branch', centre=False, span_normalise=False))
 
 mu = 1 / (4 * tmrca[0])
 mu_infer = 1 / (4 * tmrca_infer[0])
